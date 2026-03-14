@@ -1,9 +1,8 @@
 """
 Challenge 1: Porovnání pojistných nabídek (Insurance Offer Comparison)
-Domain: Odpovědnost (Liability Insurance)
 
-Input:  Multiple insurance offers with OCR text from documents
-Output: Parsed parameters per offer, ranking, best offer identification
+Input:  Multiple insurance offers with OCR text, plus a list of fields to extract
+Output: Parsed fields per offer, ranking, best offer identification
 """
 
 import os
@@ -116,71 +115,43 @@ def solve(payload: dict):
     """
     Compare insurance offers and identify the best option.
 
-    Input example:
-    {
-        "offers": [
-            {
-                "id": "generali_current",
-                "insurer": "Generali ČP",
-                "label": "Stávající smlouva",
-                "documents": [
-                    {
-                        "filename": "nabidka_generali.pdf",
-                        "ocr_text": "... OCR extracted text ..."
-                    }
-                ]
-            },
-            {
-                "id": "csob_1",
-                "insurer": "ČSOB",
-                "label": "ČSOB I.",
-                "documents": [{"filename": "...", "ocr_text": "..."}]
-            }
-        ],
-        "segment": "odpovědnost"
-    }
+    The input contains:
+    - segment: insurance segment (odpovědnost, auta, lodě, majetek, ...)
+    - fields_to_extract: list of field names to extract from each offer
+    - field_types: dict mapping field name → "number" or "string"
+    - offers: list of offers, each with id, insurer, label, and documents
+    - rfp: (optional) request for proposal document
 
     Expected output:
     {
         "offers_parsed": [
             {
-                "id": "generali_current",
-                "insurer": "Generali ČP",
-                "label": "Stávající smlouva",
-                "covered_activities": "Výpis + výluky IT a poradenské činnosti",
-                "territorial_scope": "ČR, SR, Polsko",
-                "basic_limit_czk": 50000000,
-                "limit_multiplier_per_year": 1,
-                "aggregate_limit_czk": 50000000,
-                "limit_persons_in_custody_czk": 5000000,
-                "limit_pure_financial_loss_czk": 20000000,
-                "limit_taken_items_czk": 2000000,
-                "limit_cross_liability_czk": 50000000,
-                "limit_recourse_czk": 25000000,
-                "limit_non_pecuniary_damage_czk": 15000000,
-                "basic_deductible_czk": 10000,
-                "deductible_recourse_czk": 10000,
-                "deductible_non_pecuniary_czk": 10000,
-                "deductible_brought_items_czk": 1000,
-                "deductible_financial_loss_czk": 5000,
-                "premium_czk": null
-            },
-            ...
+                "id": "allianz",
+                "insurer": "Allianz",
+                "fields": {
+                    "Roční pojistné": "125000",
+                    "Povinné ručení – limit": "100000000",
+                    ...
+                }
+            }
         ],
-        "ranking": ["csob_1", "generali_current", ...],
-        "best_offer_id": "csob_1"
+        "ranking": ["allianz", "generali", ...],
+        "best_offer_id": "allianz"
     }
     """
     # TODO: Implement your solution here
     #
     # Suggested approach:
-    # 1. For each offer, send OCR text to Gemini to extract structured parameters
-    # 2. Compare offers across all fields
-    # 3. Rank by value (coverage vs. cost vs. deductibles)
-    # 4. Return structured comparison
+    # 1. Read fields_to_extract and field_types from the input
+    # 2. For each offer, send OCR text + field list to Gemini to extract values
+    # 3. Compare offers across all fields
+    # 4. Rank by value (coverage vs. cost vs. deductibles)
+    # 5. Return structured comparison
 
     offers = payload.get("offers", [])
     segment = payload.get("segment", "")
+    fields_to_extract = payload.get("fields_to_extract", [])
+    field_types = payload.get("field_types", {})
 
     result = {
         "offers_parsed": [],
