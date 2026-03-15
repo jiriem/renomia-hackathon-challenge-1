@@ -120,7 +120,6 @@ def solve(payload: dict):
     - fields_to_extract: list of field names to extract from each offer
     - field_types: dict mapping field name → "number" or "string"
     - offers: list of offers, each with id, insurer, label, and documents
-    - rfp: (optional) request for proposal document
 
     Expected output:
     {

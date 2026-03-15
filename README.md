@@ -50,12 +50,7 @@ POST /solve
       "label": "Generali",
       "documents": [{"filename": "...", "ocr_text": "...", "pdf_url": "..."}]
     }
-  ],
-  "rfp": {
-    "filename": "poptavka.pdf",
-    "ocr_text": "... RFP/request text (if available) ...",
-    "pdf_url": "https://storage.googleapis.com/..."
-  }
+  ]
 }
 ```
 
@@ -71,13 +66,11 @@ POST /solve
 | `offers[].documents` | Array of documents for this offer, each with `filename`, `ocr_text`, and `pdf_url` |
 | `offers[].documents[].ocr_text` | Full OCR-extracted text from the document — this is your primary data source |
 | `offers[].documents[].pdf_url` | Direct URL to the original PDF (for verification/debugging) |
-| `rfp` | Request for Proposal document (not always present) — contains the client's requirements |
 
 ### Important notes about the input
 
 - **Field names are in Czech** and vary per segment (odpovědnost has 66 fields, auta has 17, lodě has 16, etc.)
 - **Each offer may have multiple documents** — you need to extract fields from across all of them
-- **Some segments include an RFP** — the RFP describes what the client needs, which helps with ranking
 - **The `ocr_text` is already extracted** — you don't need to download or process PDFs unless you want to verify
 
 ## Expected output
@@ -235,7 +228,7 @@ The `best_offer_id` should be the first insurer in your ranking (the one that wi
 - Each offer may have multiple documents — concatenate all OCR texts for one offer before sending to Gemini
 - Czech insurance documents use terms like "limit plnění", "spoluúčast", "pojistné", "pojistná částka"
 - Numbers may appear as "50 000 000 Kč", "50.000.000,- Kč", "CZK 150,000,000" — the scorer handles normalization, just return the value as you find it
-- For ranking: higher coverage limits + lower deductibles + lower premium = better offer. The RFP (if present) may specify what the client prioritizes
+- For ranking: higher coverage limits + lower deductibles + lower premium = better offer
 - Use the sidecar DB to cache parsed results and avoid redundant Gemini calls across evaluation rounds
 - Return `"N/A"` for fields you can't find rather than guessing — wrong values score worse than missing ones
 - The `pdf_url` field lets you download the original PDF if you want to use your own OCR or verify the text
